@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Alfred Delivery">
+  <title>Alfred Delivery</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#F5F5F7;min-height:100vh}
+    .hd{background:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #E5E5EA;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+    .logo{width:40px;height:40px;border-radius:10px;background:#A8D8DC;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px;font-family:Georgia,serif;font-weight:700;color:#1C1C1E}
+    .ht h1{font-size:19px;font-weight:700;color:#1C1C1E}.ht p{font-size:12px;color:#8E8E93;margin-top:1px}
+    .rb{margin-left:auto;background:none;border:1px solid #E5E5EA;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;color:#1C1C1E;cursor:pointer}
+    .rb:active{background:#F2F2F7}
+    @keyframes rot{to{transform:rotate(360deg)}}
+    .spinning{animation:rot .7s linear infinite}
+    .sb{background:#fff;border-bottom:1px solid #E5E5EA;padding:10px 20px;display:flex;gap:24px}
+    .st{text-align:center}.sv{font-size:21px;font-weight:700;color:#1C1C1E}
+    .sl{font-size:10px;color:#8E8E93;text-transform:uppercase;letter-spacing:.4px;margin-top:1px}
+    .sv.done{color:#16A34A}.sv.todo{color:#7C3AED}
+    .pw{padding:10px 20px 2px}
+    .pb{background:#E5E5EA;border-radius:8px;height:7px;overflow:hidden}
+    .pf{background:#16A34A;height:100%;border-radius:8px;transition:width .4s ease}
+    .pl{font-size:11px;color:#8E8E93;margin-top:5px}
+    .ct{padding:14px}
+    .sh{font-size:11px;font-weight:700;color:#8E8E93;text-transform:uppercase;letter-spacing:.6px;padding:0 4px;margin-bottom:7px;margin-top:14px}
+    .sh:first-of-type{margin-top:0}
+    .ac{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:12px}
+    .ac.alldone{background:#F0FDF4}
+    .ah{padding:13px 16px;border-bottom:1px solid #F2F2F7;display:flex;align-items:center;gap:10px}
+    .ainfo{flex:1;min-width:0}
+    .aname{font-size:14px;font-weight:700;color:#1C1C1E;line-height:1.3}
+    .ac.alldone .aname{color:#15803D}
+    .asub{font-size:11px;color:#8E8E93;margin-top:2px}
+    .ab{flex-shrink:0;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700}
+    .bt{background:#EDE9FE;color:#7C3AED}.bd{background:#DCFCE7;color:#15803D}
+    .pr{padding:11px 16px;border-bottom:1px solid #F2F2F7;display:flex;align-items:center;gap:10px}
+    .pr:last-child{border-bottom:none}
+    .livbtn{height:36px;padding:0 14px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;transition:all .15s;white-space:nowrap}
+    .livbtn.cafe-btn{background:#FEF3C7;color:#92400E;border:1.5px solid #92400E}
+    .livbtn.mat-btn{background:#EDE9FE;color:#7C3AED;border:1.5px solid #7C3AED}
+    .livbtn.on{background:#16A34A;color:#fff;border-color:#16A34A}
+    .livbtn:active{opacity:.75}
+    .pi{flex:1;min-width:0}
+    .pn{font-size:14px;font-weight:500;color:#374151;margin-bottom:2px}
+    .pn:last-child{margin-bottom:0}
+    .pn.dn{color:#8E8E93;text-decoration:line-through}
+    .pq{font-size:12px;font-weight:700;padding:2px 9px;border-radius:16px;flex-shrink:0}
+    .qc{background:#FEF3C7;color:#92400E}
+    .qm{background:#EDE9FE;color:#7C3AED}
+    .em{text-align:center;padding:60px 20px}
+    .ei{font-size:52px;margin-bottom:14px}
+    .et{font-size:20px;font-weight:700;color:#1C1C1E}
+    .es{font-size:14px;color:#8E8E93;margin-top:5px}
+    .ld{text-align:center;padding:60px 20px}
+    .ls{width:34px;height:34px;border:3px solid #E5E5EA;border-top-color:#7C3AED;border-radius:50%;animation:rot .7s linear infinite;margin:0 auto 14px}
+    .lt{font-size:14px;color:#8E8E93}
+    .ts{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1C1C1E;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:1000}
+    .ts.on{opacity:1}
+    .err-box{background:#FEE2E2;color:#DC2626;border-radius:12px;padding:16px;margin:16px;font-size:14px;line-height:1.5}
+    .err-box a{color:#DC2626;font-weight:700}
+  </style>
+</head>
+<body>
+<div class="hd">
+  <div class="logo">A</div>
+  <div class="ht"><h1>Alfred Delivery</h1><p id="sub">Loading...</p></div>
+  <button class="rb" id="rb" onclick="doLoad()">&#8635; Refresh</button>
+</div>
+<div class="sb">
+  <div class="st"><div class="sv todo" id="sTodo">-</div><div class="sl">Pending</div></div>
+  <div class="st"><div class="sv done" id="sDone">-</div><div class="sl">Done</div></div>
+  <div class="st"><div class="sv" id="sSites">-</div><div class="sl">Sites</div></div>
+</div>
+<div class="pw">
+  <div class="pb"><div class="pf" id="pf" style="width:0%"></div></div>
+  <div class="pl" id="pl">Loading...</div>
+</div>
+<div class="ct" id="ct">
+  <div class="ld"><div class="ls"></div><div class="lt">Loading your deliveries...</div></div>
+</div>
+<div class="ts" id="ts"></div>
+
+<script>
+var CK = {};
+var WEBAPP = "https://script.google.com/macros/s/AKfycbw41mSrg_tvoNS14Faf4RsOKI-P7LYflruuyWFTmIucJhszs5N8Eg8BH_-FxusFKC7DCQ/exec";
+
+function isCafe(p) {
+  var l = p.toLowerCase();
+  return (l.indexOf("caf") === 0 || l.indexOf("arabica") >= 0 || l.indexOf("espresso") >= 0 || l.indexOf("route des sens") >= 0) && l.indexOf("machine") < 0;
+}
+
+function doLoad() {
+  document.getElementById("rb").classList.add("spinning");
+  document.getElementById("sub").textContent = "Loading...";
+  document.getElementById("ct").innerHTML = '<div class="ld"><div class="ls"></div><div class="lt">Loading your deliveries...</div></div>';
+  fetch(WEBAPP + "?action=getLivraisons")
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      document.getElementById("rb").classList.remove("spinning");
+      doRender(data);
+    })
+    .catch(function(e) {
+      document.getElementById("rb").classList.remove("spinning");
+      document.getElementById("ct").innerHTML =
+        '<div class="err-box">Connection error. Make sure you are connected to the internet.<br><br>' + e + '</div>';
+    });
+}
+
+function doRender(items) {
+  if (!items || !items.length) {
+    document.getElementById("ct").innerHTML = '<div class="em"><div class="ei">&#x1F389;</div><div class="et">All done!</div><div class="es">No pending deliveries.</div></div>';
+    upS(0, 0, 0); return;
+  }
+  var sm = {};
+  items.forEach(function(x) {
+    if (!x.produit) return;
+    var s = x.site || "-", p = x.produit;
+    if (!sm[s]) sm[s] = { cafe: {}, mat: [] };
+    if (isCafe(p)) {
+      if (!sm[s].cafe[p]) sm[s].cafe[p] = { t: 0, d: 0 };
+      sm[s].cafe[p].t++;
+      if (x.scanne) sm[s].cafe[p].d++;
+    } else {
+      sm[s].mat.push({ p: p, done: x.scanne });
+    }
+  });
+  var sites = Object.keys(sm).sort();
+  var pend = [], done2 = [];
+  sites.forEach(function(s) {
+    var cafeKeys = Object.keys(sm[s].cafe);
+    var cafeDone = cafeKeys.length === 0 || cafeKeys.every(function(p) { return CK["cafe:" + s + ":" + p] || (sm[s].cafe[p].d === sm[s].cafe[p].t && sm[s].cafe[p].t > 0); });
+    var matDone = sm[s].mat.length === 0 || CK["mat:" + s] || sm[s].mat.every(function(x) { return x.done; });
+    if (cafeDone && matDone) done2.push(s); else pend.push(s);
+  });
+  upS(pend.length, done2.length, sites.length);
+  var h = "";
+  if (pend.length) { h += "<div class='sh'>To deliver - " + pend.length + " site" + (pend.length > 1 ? "s" : "") + "</div>"; pend.forEach(function(s) { h += mkCard(s, sm[s]); }); }
+  if (done2.length) { h += "<div class='sh'>Completed - " + done2.length + " site" + (done2.length > 1 ? "s" : "") + "</div>"; done2.forEach(function(s) { h += mkCard(s, sm[s]); }); }
+  document.getElementById("ct").innerHTML = h;
+}
+
+function mkCard(site, data) {
+  var cafeKeys = Object.keys(data.cafe);
+  var cafeDone = cafeKeys.length === 0 || cafeKeys.every(function(p) { return CK["cafe:" + site + ":" + p] || (data.cafe[p].d === data.cafe[p].t && data.cafe[p].t > 0); });
+  var matDone = data.mat.length === 0 || CK["mat:" + site] || data.mat.every(function(x) { return x.done; });
+  var allDone = cafeDone && matDone;
+  var sub = [], ck = 0;
+  cafeKeys.forEach(function(p) { ck += data.cafe[p].t; });
+  if (ck > 0) sub.push("&#x2615; " + ck + " kg");
+  if (data.mat.length > 0) sub.push("&#x1F4E6; " + data.mat.length + " item" + (data.mat.length > 1 ? "s" : ""));
+  var h = "<div class='ac" + (allDone ? " alldone" : "") + "'>"
+    + "<div class='ah'>"
+    + "<div class='ainfo'><div class='aname'>" + esc(site) + "</div><div class='asub'>" + sub.join(" &middot; ") + "</div></div>"
+    + "<div class='ab " + (allDone ? "bd" : "bt") + "'>" + (allDone ? "&#x2705; Done" : "Pending") + "</div>"
+    + "</div>";
+  cafeKeys.forEach(function(prod) {
+    var g = data.cafe[prod], k = "cafe:" + site + ":" + prod, isd = CK[k] || (g.d === g.t && g.t > 0);
+    h += "<div class='pr'>"
+      + "<div class='pi'><div class='pn" + (isd ? " dn" : "") + "'> &#x2615; " + esc(prod) + "</div></div>"
+      + "<div class='pq qc'>&#xD7;" + g.t + " kg</div>"
+      + "<button class='livbtn cafe-btn" + (isd ? " on" : "") + "' onclick='togCafe(this," + JSON.stringify(k) + "," + JSON.stringify(site) + "," + JSON.stringify(prod) + ")'>" + (isd ? "&#x2705; Delivered" : "Deliver") + "</button>"
+      + "</div>";
+  });
+  if (data.mat.length > 0) {
+    var mk = "mat:" + site, misd = CK[mk] || data.mat.every(function(x) { return x.done; });
+    h += "<div class='pr'>"
+      + "<div class='pi'>";
+    data.mat.forEach(function(x) { h += "<div class='pn" + (misd ? " dn" : "") + "'> " + esc(x.p) + "</div>"; });
+    h += "</div>"
+      + "<div class='pq qm'>&#xD7;" + data.mat.length + "</div>"
+      + "<button class='livbtn mat-btn" + (misd ? " on" : "") + "' onclick='togMat(this," + JSON.stringify(mk) + "," + JSON.stringify(site) + ")'>" + (misd ? "&#x2705; Delivered" : "Deliver") + "</button>"
+      + "</div>";
+  }
+  h += "</div>";
+  return h;
+}
+
+function togCafe(el, k, site, prod) {
+  if (el.classList.contains("on")) {
+    if (!confirm("Unmark this coffee delivery?")) return;
+    el.classList.remove("on"); el.innerHTML = "Deliver";
+    el.parentNode.querySelector(".pn").classList.remove("dn");
+    CK[k] = false; upD(); return;
+  }
+  if (!confirm("Did you deliver the coffee
+
+"" + prod + ""
+
+to " + site + "?")) return;
+  CK[k] = true;
+  el.classList.add("on"); el.innerHTML = "&#x2705; Delivered";
+  el.parentNode.querySelector(".pn").classList.add("dn");
+  showT("&#x2615; Coffee delivered!");
+  upD();
+}
+
+function togMat(el, k, site) {
+  if (el.classList.contains("on")) {
+    if (!confirm("Unmark this delivery?")) return;
+    el.classList.remove("on"); el.innerHTML = "Deliver";
+    el.parentNode.querySelectorAll(".pn").forEach(function(n) { n.classList.remove("dn"); });
+    CK[k] = false; upD(); return;
+  }
+  if (!confirm("Did you deliver all the materials
+
+to " + site + "?")) return;
+  CK[k] = true;
+  el.classList.add("on"); el.innerHTML = "&#x2705; Delivered";
+  el.parentNode.querySelectorAll(".pn").forEach(function(n) { n.classList.add("dn"); });
+  showT("&#x1F4E6; Materials delivered!");
+  upD();
+}
+
+function upS(pend, done, sites) {
+  document.getElementById("sTodo").textContent = pend;
+  document.getElementById("sDone").textContent = done;
+  document.getElementById("sSites").textContent = sites;
+  var tot = pend + done, pct = tot > 0 ? Math.round(done / tot * 100) : 0;
+  document.getElementById("pf").style.width = pct + "%";
+  document.getElementById("pl").textContent = pct + "% - " + done + "/" + tot + " sites done";
+  document.getElementById("sub").textContent = tot + " site" + (tot !== 1 ? "s" : "");
+}
+
+function upD() {
+  var cards = document.querySelectorAll(".ac"), d = 0, t = cards.length;
+  cards.forEach(function(c) {
+    var btns = c.querySelectorAll(".livbtn");
+    var ok = btns.length > 0 && Array.from(btns).every(function(x) { return x.classList.contains("on"); });
+    if (ok) { c.classList.add("alldone"); d++; } else c.classList.remove("alldone");
+  });
+  var pct = t > 0 ? Math.round(d / t * 100) : 0;
+  document.getElementById("pf").style.width = pct + "%";
+  document.getElementById("pl").textContent = pct + "% - " + d + "/" + t + " sites done";
+  document.getElementById("sTodo").textContent = t - d;
+  document.getElementById("sDone").textContent = d;
+}
+
+var TT;
+function showT(m) { var t = document.getElementById("ts"); t.innerHTML = m; t.classList.add("on"); clearTimeout(TT); TT = setTimeout(function() { t.classList.remove("on"); }, 2500); }
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+
+doLoad();
+</script>
+</body>
+</html>
