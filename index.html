@@ -59,8 +59,6 @@
     .lt{font-size:14px;color:#8E8E93}
     .ts{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1C1C1E;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:1000}
     .ts.on{opacity:1}
-    .err-box{background:#FEE2E2;color:#DC2626;border-radius:12px;padding:16px;margin:16px;font-size:14px;line-height:1.5}
-    .err-box a{color:#DC2626;font-weight:700}
   </style>
 </head>
 <body>
@@ -84,7 +82,6 @@
 <div class="ts" id="ts"></div>
 
 <script>
-var CK = {};
 var WEBAPP = "https://script.google.com/macros/s/AKfycbw41mSrg_tvoNS14Faf4RsOKI-P7LYflruuyWFTmIucJhszs5N8Eg8BH_-FxusFKC7DCQ/exec";
 
 function isCafe(p) {
@@ -95,7 +92,6 @@ function isCafe(p) {
 function doLoad() {
   document.getElementById("rb").classList.add("spinning");
   document.getElementById("sub").textContent = "Loading...";
-  document.getElementById("ct").innerHTML = '<div class="ld"><div class="ls"></div><div class="lt">Loading your deliveries...</div></div>';
   fetch(WEBAPP + "?action=getLivraisons")
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -104,8 +100,7 @@ function doLoad() {
     })
     .catch(function(e) {
       document.getElementById("rb").classList.remove("spinning");
-      document.getElementById("ct").innerHTML =
-        '<div class="err-box">Connection error. Make sure you are connected to the internet.<br><br>' + e + '</div>';
+      document.getElementById("ct").innerHTML = '<div style="padding:20px;color:#DC2626">Connection error: ' + e + '</div>';
     });
 }
 
@@ -120,19 +115,21 @@ function doRender(items) {
     var s = x.site || "-", p = x.produit;
     if (!sm[s]) sm[s] = { cafe: {}, mat: [] };
     if (isCafe(p)) {
+      // Cafe : utilise col E (scanne) pour savoir si livré
       if (!sm[s].cafe[p]) sm[s].cafe[p] = { t: 0, d: 0 };
       sm[s].cafe[p].t++;
       if (x.scanne) sm[s].cafe[p].d++;
     } else {
-      sm[s].mat.push({ p: p, done: false });
+      // Materiel : utilise col G (livre) pour savoir si livré par Tushar
+      sm[s].mat.push({ p: p, done: x.livre });
     }
   });
   var sites = Object.keys(sm).sort();
   var pend = [], done2 = [];
   sites.forEach(function(s) {
     var cafeKeys = Object.keys(sm[s].cafe);
-    var cafeDone = cafeKeys.length === 0 || cafeKeys.every(function(p) { return CK["cafe:" + s + ":" + p] || (sm[s].cafe[p].d === sm[s].cafe[p].t && sm[s].cafe[p].t > 0); });
-    var matDone = sm[s].mat.length === 0 || CK["mat:" + s] || sm[s].mat.every(function(x) { return x.done; });
+    var cafeDone = cafeKeys.length === 0 || cafeKeys.every(function(p) { return sm[s].cafe[p].d === sm[s].cafe[p].t && sm[s].cafe[p].t > 0; });
+    var matDone = sm[s].mat.length === 0 || sm[s].mat.every(function(x) { return x.done; });
     if (cafeDone && matDone) done2.push(s); else pend.push(s);
   });
   upS(pend.length, done2.length, sites.length);
@@ -144,8 +141,8 @@ function doRender(items) {
 
 function mkCard(site, data) {
   var cafeKeys = Object.keys(data.cafe);
-  var cafeDone = cafeKeys.length === 0 || cafeKeys.every(function(p) { return CK["cafe:" + site + ":" + p] || (data.cafe[p].d === data.cafe[p].t && data.cafe[p].t > 0); });
-  var matDone = data.mat.length === 0 || CK["mat:" + site] || data.mat.every(function(x) { return x.done; });
+  var cafeDone = cafeKeys.length === 0 || cafeKeys.every(function(p) { return data.cafe[p].d === data.cafe[p].t && data.cafe[p].t > 0; });
+  var matDone = data.mat.length === 0 || data.mat.every(function(x) { return x.done; });
   var allDone = cafeDone && matDone;
   var sub = [], ck = 0;
   cafeKeys.forEach(function(p) { ck += data.cafe[p].t; });
@@ -156,56 +153,56 @@ function mkCard(site, data) {
     + "<div class='ainfo'><div class='aname'>" + esc(site) + "</div><div class='asub'>" + sub.join(" &middot; ") + "</div></div>"
     + "<div class='ab " + (allDone ? "bd" : "bt") + "'>" + (allDone ? "&#x2705; Done" : "Pending") + "</div>"
     + "</div>";
+  // Cafe rows
   cafeKeys.forEach(function(prod) {
-    var g = data.cafe[prod], k = "cafe:" + site + ":" + prod, isd = CK[k] || (g.d === g.t && g.t > 0);
+    var g = data.cafe[prod], isd = g.d === g.t && g.t > 0;
     h += "<div class='pr'>"
       + "<div class='pi'><div class='pn" + (isd ? " dn" : "") + "'> &#x2615; " + esc(prod) + "</div></div>"
       + "<div class='pq qc'>&#xD7;" + g.t + " kg</div>"
-      + "<button class='livbtn cafe-btn" + (isd ? " on" : "") + "' onclick='togCafe(this," + JSON.stringify(k) + "," + JSON.stringify(site) + "," + JSON.stringify(prod) + ")'>" + (isd ? "&#x2705; Delivered" : "Deliver") + "</button>"
+      + "<button class='livbtn cafe-btn" + (isd ? " on" : "") + "' onclick='togCafe(this," + JSON.stringify(site) + "," + JSON.stringify(prod) + ")'>" + (isd ? "&#x2705; Delivered" : "Deliver") + "</button>"
       + "</div>";
   });
+  // Materiel - une coche par adresse
   if (data.mat.length > 0) {
-    var mk = "mat:" + site, misd = CK[mk] || data.mat.every(function(x) { return x.done; });
+    var misd = data.mat.every(function(x) { return x.done; });
     h += "<div class='pr'>"
       + "<div class='pi'>";
-    data.mat.forEach(function(x) { h += "<div class='pn" + (misd ? " dn" : "") + "'> " + esc(x.p) + "</div>"; });
+    data.mat.forEach(function(x) { h += "<div class='pn" + (x.done ? " dn" : "") + "'> " + esc(x.p) + "</div>"; });
     h += "</div>"
       + "<div class='pq qm'>&#xD7;" + data.mat.length + "</div>"
-      + "<button class='livbtn mat-btn" + (misd ? " on" : "") + "' onclick='togMat(this," + JSON.stringify(mk) + "," + JSON.stringify(site) + ")'>" + (misd ? "&#x2705; Delivered" : "Deliver") + "</button>"
+      + "<button class='livbtn mat-btn" + (misd ? " on" : "") + "' onclick='togMat(this," + JSON.stringify(site) + ")'>" + (misd ? "&#x2705; Delivered" : "Deliver") + "</button>"
       + "</div>";
   }
   h += "</div>";
   return h;
 }
 
-function togCafe(el, k, site, prod) {
-  if (el.classList.contains("on")) {
-    if (!confirm("Unmark this coffee delivery?")) return;
-    el.classList.remove("on"); el.innerHTML = "Deliver";
-    el.parentNode.querySelector(".pn").classList.remove("dn");
-    CK[k] = false; upD(); return;
-  }
-  if (!confirm("Delivered: " + prod + " at " + site + "?")) return;
-  CK[k] = true;
-  el.classList.add("on"); el.innerHTML = "&#x2705; Delivered";
-  el.parentNode.querySelector(".pn").classList.add("dn");
-  showT("&#x2615; Coffee delivered!");
-  upD();
+function togCafe(el, site, prod) {
+  if (el.classList.contains("on")) return; // cafe : pas de décocher
+  if (!confirm("Did you deliver the coffee to " + site + "?")) return;
+  el.disabled = true;
+  el.innerHTML = "Saving...";
+  fetch(WEBAPP + "?action=marquerLivre&type=cafe&site=" + encodeURIComponent(site) + "&produit=" + encodeURIComponent(prod))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) { doLoad(); showT("&#x2615; Coffee delivered!"); }
+      else { el.disabled = false; el.innerHTML = "Deliver"; alert("Error: " + d.message); }
+    })
+    .catch(function() { el.disabled = false; el.innerHTML = "Deliver"; });
 }
 
-function togMat(el, k, site) {
-  if (el.classList.contains("on")) {
-    if (!confirm("Unmark this delivery?")) return;
-    el.classList.remove("on"); el.innerHTML = "Deliver";
-    el.parentNode.querySelectorAll(".pn").forEach(function(n) { n.classList.remove("dn"); });
-    CK[k] = false; upD(); return;
-  }
-  if (!confirm("Delivered all materials at " + site + "?")) return;
-  CK[k] = true;
-  el.classList.add("on"); el.innerHTML = "&#x2705; Delivered";
-  el.parentNode.querySelectorAll(".pn").forEach(function(n) { n.classList.add("dn"); });
-  showT("&#x1F4E6; Materials delivered!");
-  upD();
+function togMat(el, site) {
+  if (el.classList.contains("on")) return;
+  if (!confirm("Did you deliver all the materials to " + site + "?")) return;
+  el.disabled = true;
+  el.innerHTML = "Saving...";
+  fetch(WEBAPP + "?action=marquerLivre&type=mat&site=" + encodeURIComponent(site))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) { doLoad(); showT("&#x1F4E6; Materials delivered!"); }
+      else { el.disabled = false; el.innerHTML = "Deliver"; alert("Error: " + d.message); }
+    })
+    .catch(function() { el.disabled = false; el.innerHTML = "Deliver"; });
 }
 
 function upS(pend, done, sites) {
@@ -216,20 +213,6 @@ function upS(pend, done, sites) {
   document.getElementById("pf").style.width = pct + "%";
   document.getElementById("pl").textContent = pct + "% - " + done + "/" + tot + " sites done";
   document.getElementById("sub").textContent = tot + " site" + (tot !== 1 ? "s" : "");
-}
-
-function upD() {
-  var cards = document.querySelectorAll(".ac"), d = 0, t = cards.length;
-  cards.forEach(function(c) {
-    var btns = c.querySelectorAll(".livbtn");
-    var ok = btns.length > 0 && Array.from(btns).every(function(x) { return x.classList.contains("on"); });
-    if (ok) { c.classList.add("alldone"); d++; } else c.classList.remove("alldone");
-  });
-  var pct = t > 0 ? Math.round(d / t * 100) : 0;
-  document.getElementById("pf").style.width = pct + "%";
-  document.getElementById("pl").textContent = pct + "% - " + d + "/" + t + " sites done";
-  document.getElementById("sTodo").textContent = t - d;
-  document.getElementById("sDone").textContent = d;
 }
 
 var TT;
