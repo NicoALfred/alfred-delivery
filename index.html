@@ -124,7 +124,7 @@ function doRender(items) {
       sm[s].cafe[p].t++;
       if (x.scanne) sm[s].cafe[p].d++;
     } else {
-      sm[s].mat.push({ p: p, done: x.scanne });
+      sm[s].mat.push({ p: p, done: false });
     }
   });
   var sites = Object.keys(sm).sort();
