@@ -185,11 +185,7 @@ function togCafe(el, k, site, prod) {
     el.parentNode.querySelector(".pn").classList.remove("dn");
     CK[k] = false; upD(); return;
   }
-  if (!confirm("Did you deliver the coffee
-
-"" + prod + ""
-
-to " + site + "?")) return;
+  if (!confirm("Delivered: " + prod + " at " + site + "?")) return;
   CK[k] = true;
   el.classList.add("on"); el.innerHTML = "&#x2705; Delivered";
   el.parentNode.querySelector(".pn").classList.add("dn");
@@ -204,9 +200,7 @@ function togMat(el, k, site) {
     el.parentNode.querySelectorAll(".pn").forEach(function(n) { n.classList.remove("dn"); });
     CK[k] = false; upD(); return;
   }
-  if (!confirm("Did you deliver all the materials
-
-to " + site + "?")) return;
+  if (!confirm("Delivered all materials at " + site + "?")) return;
   CK[k] = true;
   el.classList.add("on"); el.innerHTML = "&#x2705; Delivered";
   el.parentNode.querySelectorAll(".pn").forEach(function(n) { n.classList.add("dn"); });
