@@ -159,7 +159,7 @@ function mkCard(site, data) {
     h += "<div class='pr'>"
       + "<div class='pi'><div class='pn" + (isd ? " dn" : "") + "'> &#x2615; " + esc(prod) + "</div></div>"
       + "<div class='pq qc'>&#xD7;" + g.t + " kg</div>"
-      + "<button class='livbtn cafe-btn" + (isd ? " on" : "") + "' onclick='togCafe(this," + JSON.stringify(site) + "," + JSON.stringify(prod) + ")'>" + (isd ? "&#x2705; Delivered" : "Deliver") + "</button>"
+      + "<button class='livbtn cafe-btn" + (isd ? " on" : "") + "' data-site='" + esc(site).replace(/'/g,"&#39;") + "' data-prod='" + esc(prod).replace(/'/g,"&#39;") + "' onclick='togCafe(this,this.dataset.site,this.dataset.prod)'>" + (isd ? "&#x2705; Delivered" : "Deliver") + "</button>"
       + "</div>";
   });
   // Materiel - une coche par adresse
@@ -170,7 +170,7 @@ function mkCard(site, data) {
     data.mat.forEach(function(x) { h += "<div class='pn" + (x.done ? " dn" : "") + "'> " + esc(x.p) + "</div>"; });
     h += "</div>"
       + "<div class='pq qm'>&#xD7;" + data.mat.length + "</div>"
-      + "<button class='livbtn mat-btn" + (misd ? " on" : "") + "' onclick='togMat(this," + JSON.stringify(site) + ")'>" + (misd ? "&#x2705; Delivered" : "Deliver") + "</button>"
+      + "<button class='livbtn mat-btn" + (misd ? " on" : "") + "' data-site='" + esc(site).replace(/'/g,"&#39;") + "' onclick='togMat(this,this.dataset.site)'>" + (misd ? "&#x2705; Delivered" : "Deliver") + "</button>"
       + "</div>";
   }
   h += "</div>";
