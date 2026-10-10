@@ -273,7 +273,7 @@ function setMode(m) {
 function loadLivraisons() {
   document.getElementById('liv-list').innerHTML = '<div class="liv-loading"><span class="spinner-sm"></span>Chargement…</div>';
   document.getElementById('liv-count').textContent = '';
-  fetch(WEBAPP + '?action=getLivraisons')
+  fetch(WEBAPP + '?action=getAllLivraisonsStock')
     .then(function(r) { return r.json(); })
     .then(function(items) {
       livraisons = items || [];
@@ -333,7 +333,7 @@ function doRefresh() {
   var done = 0;
   function maybeStop() { done++; if (done >= (mode === 'out' ? 1 : 0)) { setTimeout(function(){ btn.classList.remove('spinning'); }, 300); } }
   if (mode === 'out') {
-    fetch(WEBAPP + '?action=getLivraisons')
+    fetch(WEBAPP + '?action=getAllLivraisonsStock')
       .then(function(r) { return r.json(); })
       .then(function(items) { livraisons = items || []; renderLivraisons(); maybeStop(); showToast('✅ Liste mise à jour'); })
       .catch(function() { maybeStop(); showToast('⚠️ Échec du rafraîchissement'); });
