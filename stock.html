@@ -1,6 +1,5 @@
 <title>Alfred Stock Mobile</title>
 <style>
-  /* Layout: full-screen mobile app, two-mode scanner with feedback */
   :root {
     --bg: #F7F7F5;
     --surface: #FFFFFF;
@@ -24,219 +23,100 @@
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #111110;
-      --surface: #1C1C1A;
-      --fg: #F2F2EF;
-      --fg-soft: #8A8A84;
-      --border: #2E2E2A;
-      --mode-in: #4ADE80;
-      --mode-in-bg: #0A2018;
-      --mode-in-light: #0F3020;
-      --mode-out: #A78BFA;
-      --mode-out-bg: #1A1028;
-      --mode-out-light: #251840;
-      --ok: #4ADE80;
-      --ok-bg: #0A2018;
-      --err: #F87171;
-      --err-bg: #2A0A0A;
-      --warn: #FBBF24;
-      --warn-bg: #2A1A04;
-      color-scheme: dark;
+      --bg: #111110; --surface: #1C1C1A; --fg: #F2F2EF; --fg-soft: #8A8A84;
+      --border: #2E2E2A; --mode-in: #4ADE80; --mode-in-bg: #0A2018; --mode-in-light: #0F3020;
+      --mode-out: #A78BFA; --mode-out-bg: #1A1028; --mode-out-light: #251840;
+      --ok: #4ADE80; --ok-bg: #0A2018; --err: #F87171; --err-bg: #2A0A0A;
+      --warn: #FBBF24; --warn-bg: #2A1A04; color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
-    --bg: #111110;
-    --surface: #1C1C1A;
-    --fg: #F2F2EF;
-    --fg-soft: #8A8A84;
-    --border: #2E2E2A;
-    --mode-in: #4ADE80;
-    --mode-in-bg: #0A2018;
-    --mode-in-light: #0F3020;
-    --mode-out: #A78BFA;
-    --mode-out-bg: #1A1028;
-    --mode-out-light: #251840;
-    --ok: #4ADE80;
-    --ok-bg: #0A2018;
-    --err: #F87171;
-    --err-bg: #2A0A0A;
-    --warn: #FBBF24;
-    --warn-bg: #2A1A04;
-    color-scheme: dark;
+    --bg: #111110; --surface: #1C1C1A; --fg: #F2F2EF; --fg-soft: #8A8A84;
+    --border: #2E2E2A; --mode-in: #4ADE80; --mode-in-bg: #0A2018; --mode-in-light: #0F3020;
+    --mode-out: #A78BFA; --mode-out-bg: #1A1028; --mode-out-light: #251840;
+    --ok: #4ADE80; --ok-bg: #0A2018; --err: #F87171; --err-bg: #2A0A0A;
+    --warn: #FBBF24; --warn-bg: #2A1A04; color-scheme: dark;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--fg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; overflow: hidden; }
 
-  html, body {
-    height: 100%;
-    background: var(--bg);
-    color: var(--fg);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    overflow: hidden;
-  }
+  .app { display: flex; flex-direction: column; height: 100%; max-width: 480px; margin: 0 auto; }
 
-  .app {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    max-width: 480px;
-    margin: 0 auto;
-  }
-
-  /* Header */
   .hd {
     padding: 16px 20px 12px;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-shrink: 0;
+    display: flex; align-items: center; gap: 12px; flex-shrink: 0;
   }
   .logo {
-    width: 38px; height: 38px;
-    background: #1A1A1A;
-    border-radius: 10px;
+    width: 38px; height: 38px; background: #1A1A1A; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 20px; font-family: Georgia, serif; font-weight: 700;
-    color: #fff; flex-shrink: 0;
+    font-size: 20px; font-family: Georgia, serif; font-weight: 700; color: #fff; flex-shrink: 0;
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .logo { background: #F2F2EF; color: #111; }
-  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .logo { background: #F2F2EF; color: #111; } }
   :root[data-theme="dark"] .logo { background: #F2F2EF; color: #111; }
+  .hd-text { flex: 1; min-width: 0; }
   .hd-text h1 { font-size: 17px; font-weight: 700; letter-spacing: -.3px; }
   .hd-text p { font-size: 12px; color: var(--fg-soft); margin-top: 1px; }
+  .hd-refresh {
+    width: 36px; height: 36px; border-radius: 10px;
+    border: 1.5px solid var(--border); background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; cursor: pointer; flex-shrink: 0; transition: background .15s;
+  }
+  .hd-refresh:active { background: var(--mode-out-bg); }
+  @keyframes spin-btn { to { transform: rotate(360deg); } }
+  .hd-refresh.spinning { animation: spin-btn .7s linear infinite; }
 
-  /* Mode toggle */
   .mode-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    padding: 14px 16px;
-    flex-shrink: 0;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    padding: 14px 16px; flex-shrink: 0;
+    background: var(--surface); border-bottom: 1px solid var(--border);
   }
   .mode-btn {
-    padding: 14px 10px;
-    border-radius: var(--radius);
-    border: 2px solid var(--border);
-    background: var(--bg);
-    color: var(--fg-soft);
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    transition: all .18s;
-    -webkit-user-select: none; user-select: none;
+    padding: 14px 10px; border-radius: var(--radius); border: 2px solid var(--border);
+    background: var(--bg); color: var(--fg-soft); font-size: 15px; font-weight: 700;
+    cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    transition: all .18s; -webkit-user-select: none; user-select: none;
   }
   .mode-btn .icon { font-size: 28px; line-height: 1; }
-  .mode-btn.active-in {
-    background: var(--mode-in-bg);
-    border-color: var(--mode-in);
-    color: var(--mode-in);
-  }
-  .mode-btn.active-out {
-    background: var(--mode-out-bg);
-    border-color: var(--mode-out);
-    color: var(--mode-out);
-  }
+  .mode-btn.active-in { background: var(--mode-in-bg); border-color: var(--mode-in); color: var(--mode-in); }
+  .mode-btn.active-out { background: var(--mode-out-bg); border-color: var(--mode-out); color: var(--mode-out); }
   .mode-btn:active { transform: scale(.97); }
 
-  /* Main scan area */
-  .main {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
+  .main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 
-  /* Scan input zone */
   .scan-zone {
-    background: var(--surface);
-    border-radius: var(--radius);
-    border: 2px solid var(--border);
-    padding: 20px 18px;
-    box-shadow: var(--shadow);
-    transition: border-color .2s;
+    background: var(--surface); border-radius: var(--radius); border: 2px solid var(--border);
+    padding: 20px 18px; box-shadow: var(--shadow); transition: border-color .2s;
   }
   .scan-zone.mode-in { border-color: var(--mode-in-light); }
   .scan-zone.mode-out { border-color: var(--mode-out-light); }
-  .scan-label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: .8px;
-    text-transform: uppercase;
-    color: var(--fg-soft);
-    margin-bottom: 10px;
-  }
+  .scan-label { font-size: 11px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--fg-soft); margin-bottom: 10px; }
   .scan-label.in { color: var(--mode-in); }
   .scan-label.out { color: var(--mode-out); }
-
-  .scan-input-wrap {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
+  .scan-input-wrap { display: flex; gap: 8px; align-items: center; }
   .scan-input {
-    flex: 1;
-    height: 52px;
-    border-radius: 10px;
-    border: 1.5px solid var(--border);
-    background: var(--bg);
-    color: var(--fg);
-    font-size: 17px;
-    font-family: 'SF Mono', ui-monospace, monospace;
-    padding: 0 14px;
-    outline: none;
-    transition: border-color .15s;
-    min-width: 0;
+    flex: 1; height: 52px; border-radius: 10px; border: 1.5px solid var(--border);
+    background: var(--bg); color: var(--fg); font-size: 17px; font-family: 'SF Mono', ui-monospace, monospace;
+    padding: 0 14px; outline: none; transition: border-color .15s; min-width: 0;
   }
   .scan-input:focus { border-color: var(--mode-out); }
   .scan-input.mode-in:focus { border-color: var(--mode-in); }
   .scan-input::placeholder { font-family: -apple-system, sans-serif; font-size: 14px; color: var(--fg-soft); }
-
   .scan-go {
-    height: 52px;
-    padding: 0 18px;
-    border: none;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: all .15s;
-    color: #fff;
+    height: 52px; padding: 0 18px; border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 700; cursor: pointer; flex-shrink: 0; transition: all .15s; color: #fff;
   }
   .scan-go.in { background: var(--mode-in); }
   .scan-go.out { background: var(--mode-out); }
   .scan-go:active { opacity: .8; transform: scale(.97); }
   .scan-go:disabled { opacity: .45; }
+  .scan-hint { font-size: 12px; color: var(--fg-soft); margin-top: 8px; text-align: center; }
 
-  .scan-hint {
-    font-size: 12px;
-    color: var(--fg-soft);
-    margin-top: 8px;
-    text-align: center;
-  }
-
-  /* Feedback card */
-  .feedback {
-    border-radius: var(--radius);
-    padding: 16px 18px;
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    box-shadow: var(--shadow);
-    animation: slideIn .2s ease;
-  }
+  /* Feedback */
+  .feedback { border-radius: var(--radius); padding: 16px 18px; display: flex; align-items: flex-start; gap: 12px; box-shadow: var(--shadow); animation: slideIn .2s ease; }
   @keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   .feedback.ok { background: var(--ok-bg); border: 1.5px solid var(--ok); }
   .feedback.err { background: var(--err-bg); border: 1.5px solid var(--err); }
@@ -251,74 +131,49 @@
   .feedback.loading .fb-title { color: var(--fg-soft); }
   .fb-sub { font-size: 13px; color: var(--fg-soft); margin-top: 3px; }
 
-  /* Scan log */
-  .log-title {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: .8px;
-    text-transform: uppercase;
-    color: var(--fg-soft);
-    padding: 4px 2px 2px;
-  }
+  /* Log session */
+  .log-title { font-size: 11px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--fg-soft); padding: 4px 2px 2px; }
   .log-list { display: flex; flex-direction: column; gap: 6px; }
-  .log-item {
-    background: var(--surface);
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .log-badge {
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 20px;
-    flex-shrink: 0;
-  }
+  .log-item { background: var(--surface); border-radius: 10px; border: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+  .log-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; flex-shrink: 0; }
   .log-badge.in { background: var(--mode-in-bg); color: var(--mode-in); }
   .log-badge.out { background: var(--mode-out-bg); color: var(--mode-out); }
   .log-prod { font-size: 13px; font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .log-time { font-size: 11px; color: var(--fg-soft); flex-shrink: 0; }
 
+  /* Liste livraisons (mode Sortie) */
+  .livraisons-section { display: none; }
+  .livraisons-section.visible { display: block; }
+  .liv-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .liv-title { font-size: 11px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--mode-out); }
+  .liv-count { font-size: 11px; color: var(--fg-soft); }
+  .liv-list { display: flex; flex-direction: column; gap: 6px; }
+  .liv-item {
+    background: var(--surface); border-radius: 10px; border: 1.5px solid var(--border);
+    padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+    transition: all .2s;
+  }
+  .liv-item.scanned { background: var(--ok-bg); border-color: var(--ok); opacity: .75; }
+  .liv-icon { font-size: 18px; flex-shrink: 0; }
+  .liv-body { flex: 1; min-width: 0; }
+  .liv-prod { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .liv-item.scanned .liv-prod { color: var(--ok); text-decoration: line-through; }
+  .liv-site { font-size: 12px; color: var(--fg-soft); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .liv-status { font-size: 18px; flex-shrink: 0; }
+  .liv-empty { text-align: center; color: var(--fg-soft); font-size: 13px; padding: 16px 0; }
+  .liv-loading { text-align: center; color: var(--fg-soft); font-size: 13px; padding: 12px 0; }
+
   /* Spinner */
   @keyframes spin { to { transform: rotate(360deg); } }
-  .spinner {
-    width: 22px; height: 22px;
-    border: 2.5px solid var(--border);
-    border-top-color: var(--mode-out);
-    border-radius: 50%;
-    animation: spin .7s linear infinite;
-    flex-shrink: 0;
-  }
+  .spinner { width: 22px; height: 22px; border: 2.5px solid var(--border); border-top-color: var(--mode-out); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+  .spinner-sm { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--mode-out); border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
 
   /* Toast */
-  .toast {
-    position: fixed;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
-    left: 50%;
-    transform: translateX(-50%) translateY(10px);
-    background: var(--fg);
-    color: var(--bg);
-    padding: 10px 18px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 600;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .25s, transform .25s;
-    z-index: 999;
-  }
+  .toast { position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); left: 50%; transform: translateX(-50%) translateY(10px); background: var(--fg); color: var(--bg); padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 999; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  .empty-log {
-    text-align: center;
-    color: var(--fg-soft);
-    font-size: 13px;
-    padding: 8px 0 4px;
-  }
 </style>
 
 <div class="app">
@@ -328,6 +183,7 @@
       <h1>Alfred Stock</h1>
       <p id="hd-sub">Choisissez un mode</p>
     </div>
+    <button class="hd-refresh" id="hd-refresh" onclick="doRefresh()" title="Rafraîchir">↻</button>
   </div>
 
   <div class="mode-row">
@@ -353,10 +209,21 @@
           onkeydown="onKey(event)">
         <button class="scan-go" id="scan-go" disabled onclick="doScan()">OK</button>
       </div>
-      <div class="scan-hint" id="scan-hint">La scanette appuie sur Entrée automatiquement</div>
+      <div class="scan-hint">La scanette appuie sur Entrée automatiquement</div>
     </div>
 
     <div id="feedback-area"></div>
+
+    <!-- Liste livraisons en attente (mode Sortie uniquement) -->
+    <div class="livraisons-section" id="livraisons-section">
+      <div class="liv-header">
+        <div class="liv-title">📋 À sortir du stock</div>
+        <div class="liv-count" id="liv-count"></div>
+      </div>
+      <div class="liv-list" id="liv-list">
+        <div class="liv-loading"><span class="spinner-sm"></span>Chargement…</div>
+      </div>
+    </div>
 
     <div class="log-title" id="log-title" hidden>Session en cours</div>
     <div class="log-list" id="log-list"></div>
@@ -368,21 +235,19 @@
 <script>
 var WEBAPP = "https://script.google.com/macros/s/AKfycbw41mSrg_tvoNS14Faf4RsOKI-P7LYflruuyWFTmIucJhszs5N8Eg8BH_-FxusFKC7DCQ/exec";
 
-var mode = null; // 'in' | 'out'
+var mode = null;
 var log = [];
+var livraisons = []; // cache de la liste livraisons
 
+// ── Mode ──────────────────────────────────────────────────────────────────
 function setMode(m) {
   mode = m;
-  var inBtn = document.getElementById('btn-in');
-  var outBtn = document.getElementById('btn-out');
+  document.getElementById('btn-in').className = 'mode-btn' + (m === 'in' ? ' active-in' : '');
+  document.getElementById('btn-out').className = 'mode-btn' + (m === 'out' ? ' active-out' : '');
   var zone = document.getElementById('scan-zone');
   var label = document.getElementById('scan-label');
   var inp = document.getElementById('scan-input');
   var go = document.getElementById('scan-go');
-  var sub = document.getElementById('hd-sub');
-
-  inBtn.className = 'mode-btn' + (m === 'in' ? ' active-in' : '');
-  outBtn.className = 'mode-btn' + (m === 'out' ? ' active-out' : '');
   zone.className = 'scan-zone mode-' + m;
   label.className = 'scan-label ' + m;
   label.textContent = m === 'in' ? '📦 ENTRÉE STOCK' : '🚚 SORTIE STOCK';
@@ -390,35 +255,107 @@ function setMode(m) {
   inp.disabled = false;
   go.className = 'scan-go ' + m;
   go.disabled = false;
-  sub.textContent = m === 'in' ? 'Mode Entrée' : 'Mode Sortie';
+  document.getElementById('hd-sub').textContent = m === 'in' ? 'Mode Entrée' : 'Mode Sortie';
   document.getElementById('feedback-area').innerHTML = '';
+
+  // Affiche/masque la section livraisons
+  var sec = document.getElementById('livraisons-section');
+  if (m === 'out') {
+    sec.classList.add('visible');
+    loadLivraisons();
+  } else {
+    sec.classList.remove('visible');
+  }
   inp.focus();
 }
 
+// ── Chargement liste livraisons ───────────────────────────────────────────
+function loadLivraisons() {
+  document.getElementById('liv-list').innerHTML = '<div class="liv-loading"><span class="spinner-sm"></span>Chargement…</div>';
+  document.getElementById('liv-count').textContent = '';
+  fetch(WEBAPP + '?action=getLivraisons')
+    .then(function(r) { return r.json(); })
+    .then(function(items) {
+      livraisons = items || [];
+      renderLivraisons();
+    })
+    .catch(function() {
+      document.getElementById('liv-list').innerHTML = '<div class="liv-empty">⚠️ Impossible de charger la liste.</div>';
+    });
+}
+
+function renderLivraisons() {
+  var list = document.getElementById('liv-list');
+  var count = document.getElementById('liv-count');
+  // Filtre : uniquement les produits NON café (ce sont ceux que Nicolas sort du stock)
+  var items = livraisons.filter(function(x) { return x.produit && !isCafe(x.produit); });
+  if (!items.length) {
+    list.innerHTML = '<div class="liv-empty">✅ Aucun produit à sortir du stock.</div>';
+    count.textContent = '';
+    return;
+  }
+  var enAttente = items.filter(function(x) { return !x.scanne && !x.rupture; }).length;
+  count.textContent = enAttente + ' en attente';
+  // Tri : non scannés d'abord, puis scannés
+  items.sort(function(a, b) {
+    var aOk = a.scanne || a.rupture ? 1 : 0;
+    var bOk = b.scanne || b.rupture ? 1 : 0;
+    return aOk - bOk || a.produit.localeCompare(b.produit);
+  });
+  var html = '';
+  items.forEach(function(x) {
+    var scanned = x.scanne;
+    var rupture = x.rupture;
+    var icon = rupture ? '⚠️' : (scanned ? '✅' : '📦');
+    var statusIcon = rupture ? '⚠️' : (scanned ? '✅' : '');
+    var cls = 'liv-item' + (scanned ? ' scanned' : '') + (rupture ? ' rupture' : '');
+    html += '<div class="' + cls + '">' +
+      '<div class="liv-icon">' + icon + '</div>' +
+      '<div class="liv-body">' +
+        '<div class="liv-prod">' + esc(x.produit) + '</div>' +
+        '<div class="liv-site">📍 ' + esc(x.site || '—') + '</div>' +
+      '</div>' +
+      '<div class="liv-status">' + statusIcon + '</div>' +
+      '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function isCafe(p) {
+  var l = p.toLowerCase();
+  return (l.indexOf('caf') === 0 || l.indexOf('arabica') >= 0 || l.indexOf('espresso') >= 0 || l.indexOf('route des sens') >= 0) && l.indexOf('machine') < 0;
+}
+
+// ── Refresh (bouton en haut) ──────────────────────────────────────────────
+function doRefresh() {
+  var btn = document.getElementById('hd-refresh');
+  btn.classList.add('spinning');
+  var done = 0;
+  function maybeStop() { done++; if (done >= (mode === 'out' ? 1 : 0)) { setTimeout(function(){ btn.classList.remove('spinning'); }, 300); } }
+  if (mode === 'out') {
+    fetch(WEBAPP + '?action=getLivraisons')
+      .then(function(r) { return r.json(); })
+      .then(function(items) { livraisons = items || []; renderLivraisons(); maybeStop(); showToast('✅ Liste mise à jour'); })
+      .catch(function() { maybeStop(); showToast('⚠️ Échec du rafraîchissement'); });
+  } else {
+    setTimeout(function() { btn.classList.remove('spinning'); showToast('↻ Rafraîchi'); }, 400);
+  }
+}
+
+// ── Scan ──────────────────────────────────────────────────────────────────
 function onKey(e) {
   if (e.key === 'Enter') { e.preventDefault(); doScan(); }
 }
 
-// Correction AZERTY→QWERTY : si la scanette envoie du QWERTY US
-// mais l'iPhone interprète en AZERTY FR, les chiffres et certains
-// caractères sont déplacés. On remet dans le bon sens.
 var AZERTY_MAP = {
   '&': '1', 'é': '2', '"': '3', "'": '4', '(': '5',
   '-': '6', 'è': '7', '_': '8', 'ç': '9', 'à': '0',
   'É': '2', 'È': '7', 'Ç': '9', 'À': '0',
-  // touches du bas du clavier AZERTY
-  ';': 'm', ':': '/', '!': '/', '%': '%', '#': '#', // laisser tels quels
-  // ponctuation fréquente dans les EAN/code128
   ')': '-', '=': '='
 };
 function fixAzerty(s) {
-  // Ne corrige que si la chaîne contient des caractères AZERTY typiques
-  // (évite de modifier si la scanette est déjà en AZERTY ou QWERTY FR bien configuré)
-  var hasAzertyDigit = /[&é"'(\-è_çà]/.test(s);
-  if (!hasAzertyDigit) return s;
-  return s.split('').map(function(c) {
-    return AZERTY_MAP.hasOwnProperty(c) ? AZERTY_MAP[c] : c;
-  }).join('');
+  if (!/[&é"'(\-è_çà]/.test(s)) return s;
+  return s.split('').map(function(c) { return AZERTY_MAP.hasOwnProperty(c) ? AZERTY_MAP[c] : c; }).join('');
 }
 
 function doScan() {
@@ -427,10 +364,8 @@ function doScan() {
   var val = fixAzerty(raw);
   if (!val || !mode) return;
   inp.value = '';
-
   var action = mode === 'in' ? 'stockEntree' : 'stockSortie';
-  var corrected = (val !== raw);
-  showLoading('Recherche en cours…' + (corrected ? ' (AZERTY→corrected)' : ''));
+  showLoading('Recherche en cours…');
 
   fetch(WEBAPP + '?action=' + action + '&barcode=' + encodeURIComponent(val))
     .then(function(r) { return r.json(); })
@@ -438,6 +373,10 @@ function doScan() {
       if (d.ok) {
         showFeedback('ok', d.produit, d.message);
         addLog(mode, d.produit);
+        // En mode Sortie : marquer visuellement le produit dans la liste
+        if (mode === 'out' && d.produit) {
+          markScanned(d.produit);
+        }
       } else if (d.warn) {
         showFeedback('warn', d.produit || 'Produit inconnu', d.message);
       } else {
@@ -445,17 +384,31 @@ function doScan() {
       }
       inp.focus();
     })
-    .catch(function(e) {
+    .catch(function() {
       showFeedback('err', 'Connexion impossible', 'Vérifiez votre connexion et réessayez.');
       inp.focus();
     });
 }
 
+// Marque un produit comme scanné dans la liste locale sans recharger
+function markScanned(produit) {
+  var prodLow = produit.toLowerCase().trim();
+  var found = false;
+  for (var i = 0; i < livraisons.length; i++) {
+    if (!livraisons[i].scanne && String(livraisons[i].produit).toLowerCase().trim() === prodLow) {
+      livraisons[i].scanne = true;
+      found = true;
+      break;
+    }
+  }
+  if (found) renderLivraisons();
+}
+
+// ── Feedback ──────────────────────────────────────────────────────────────
 function showLoading(msg) {
   document.getElementById('feedback-area').innerHTML =
     '<div class="feedback loading"><div class="spinner"></div><div class="fb-body"><div class="fb-title">' + msg + '</div></div></div>';
 }
-
 function showFeedback(type, title, sub) {
   var icons = { ok: '✅', err: '❌', warn: '⚠️' };
   document.getElementById('feedback-area').innerHTML =
@@ -466,13 +419,12 @@ function showFeedback(type, title, sub) {
     '</div></div>';
 }
 
+// ── Log session ───────────────────────────────────────────────────────────
 function addLog(m, produit) {
   var now = new Date();
   var time = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   log.unshift({ mode: m, produit: produit, time: time });
-  var title = document.getElementById('log-title');
-  var list = document.getElementById('log-list');
-  title.hidden = false;
+  document.getElementById('log-title').hidden = false;
   var html = '';
   log.slice(0, 10).forEach(function(item) {
     html += '<div class="log-item">' +
@@ -481,14 +433,20 @@ function addLog(m, produit) {
       '<span class="log-time">' + item.time + '</span>' +
       '</div>';
   });
-  list.innerHTML = html;
+  document.getElementById('log-list').innerHTML = html;
 }
 
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// ── Utils ─────────────────────────────────────────────────────────────────
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+var _toastTimer;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2000);
 }
 
-// Auto-focus à l'ouverture si mode déjà choisi
 document.getElementById('scan-input').addEventListener('blur', function() {
   if (mode) { var self = this; setTimeout(function(){ self.focus(); }, 100); }
 });
