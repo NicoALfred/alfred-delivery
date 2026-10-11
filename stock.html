@@ -348,13 +348,18 @@ function onKey(e) {
 }
 
 var AZERTY_MAP = {
+  // AZERTY FR : shift+chiffre → chiffre
   '&': '1', 'é': '2', '"': '3', "'": '4', '(': '5',
   '-': '6', 'è': '7', '_': '8', 'ç': '9', 'à': '0',
   'É': '2', 'È': '7', 'Ç': '9', 'À': '0',
-  ')': '-', '=': '='
+  ')': '-', '=': '=',
+  // QWERTY US shift+chiffre → chiffre (scanner en mode shift sur iPhone)
+  '!': '1', '@': '2', '#': '3', '$': '4', '%': '5',
+  '^': '6', '&': '1', '*': '8',
+  // Note: '&' déjà mappé sur '1' ci-dessus (AZERTY), cohérent
 };
 function fixAzerty(s) {
-  if (!/[&é"'(\-è_çà]/.test(s)) return s;
+  if (!/[&é"'(\-è_çà!@#$%^*]/.test(s)) return s;
   return s.split('').map(function(c) { return AZERTY_MAP.hasOwnProperty(c) ? AZERTY_MAP[c] : c; }).join('');
 }
 
