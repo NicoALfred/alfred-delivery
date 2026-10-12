@@ -163,6 +163,21 @@
   .liv-item.scanned .liv-prod { color: var(--ok); text-decoration: line-through; }
   .liv-site { font-size: 12px; color: var(--fg-soft); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .liv-status { font-size: 18px; flex-shrink: 0; }
+  .liv-check-btn {
+    flex-shrink: 0;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--mode-out);
+    background: var(--mode-out-bg);
+    color: var(--mode-out);
+    font-size: 18px; font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+    -webkit-user-select: none; user-select: none;
+  }
+  .liv-check-btn:active { transform: scale(.9); opacity: .7; }
+  .liv-check-btn:disabled { opacity: .4; }
   .liv-empty { text-align: center; color: var(--fg-soft); font-size: 13px; padding: 16px 0; }
   .liv-loading { text-align: center; color: var(--fg-soft); font-size: 13px; padding: 12px 0; }
 
@@ -303,19 +318,24 @@ function renderLivraisons() {
     return aOk - bOk || a.produit.localeCompare(b.produit);
   });
   var html = '';
-  items.forEach(function(x) {
+  items.forEach(function(x, idx) {
     var scanned = x.scanne;
     var rupture = x.rupture;
     var icon = rupture ? '⚠️' : (scanned ? '✅' : '📦');
-    var statusIcon = rupture ? '⚠️' : (scanned ? '✅' : '');
     var cls = 'liv-item' + (scanned ? ' scanned' : '') + (rupture ? ' rupture' : '');
+    var btnHtml = '';
+    if (!scanned && !rupture) {
+      btnHtml = '<button class="liv-check-btn" onclick="marquerManuellement(this,' + idx + ')" title="Cocher à la main">✓</button>';
+    } else {
+      btnHtml = '<div class="liv-status">' + (rupture ? '⚠️' : '✅') + '</div>';
+    }
     html += '<div class="' + cls + '">' +
       '<div class="liv-icon">' + icon + '</div>' +
       '<div class="liv-body">' +
         '<div class="liv-prod">' + esc(x.produit) + '</div>' +
         '<div class="liv-site">📍 ' + esc(x.site || '—') + '</div>' +
       '</div>' +
-      '<div class="liv-status">' + statusIcon + '</div>' +
+      btnHtml +
       '</div>';
   });
   list.innerHTML = html;
@@ -391,6 +411,59 @@ function doScan() {
     .catch(function() {
       showFeedback('err', 'Connexion impossible', 'Vérifiez votre connexion et réessayez.');
       inp.focus();
+    });
+}
+
+// Cochage manuel depuis la liste (sans scanner)
+function marquerManuellement(btn, idx) {
+  // Retrouve le vrai index dans livraisons (items est filtré+trié, on cherche par produit+site)
+  var listItems = document.querySelectorAll('.liv-item:not(.scanned):not(.rupture)');
+  // On cherche dans livraisons le produit correspondant à la position dans la liste rendue
+  var nonScanned = [];
+  livraisons.filter(function(x) { return x.produit && !isCafe(x.produit); })
+    .sort(function(a, b) {
+      var aOk = a.scanne || a.rupture ? 1 : 0;
+      var bOk = b.scanne || b.rupture ? 1 : 0;
+      return aOk - bOk || a.produit.localeCompare(b.produit);
+    })
+    .forEach(function(x, i) { if (!x.scanne && !x.rupture) nonScanned.push(x); });
+
+  // idx correspond à la position dans items[] (tous), on doit retrouver le bon
+  // Plus simple : on lit le nom affiché dans le parent
+  var row = btn.closest('.liv-item');
+  var prodNom = row.querySelector('.liv-prod').textContent;
+  var siteNom = row.querySelector('.liv-site').textContent.replace('📍 ', '').trim();
+
+  // Désactive le bouton pendant l'appel
+  btn.disabled = true;
+  btn.textContent = '…';
+
+  fetch(WEBAPP + '?action=stockSortieManuel&produit=' + encodeURIComponent(prodNom) + '&site=' + encodeURIComponent(siteNom))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok || d.warn) {
+        // Marquer dans livraisons[]
+        for (var i = 0; i < livraisons.length; i++) {
+          if (!livraisons[i].scanne &&
+              livraisons[i].produit === prodNom &&
+              (livraisons[i].site || '—') === siteNom) {
+            livraisons[i].scanne = true;
+            break;
+          }
+        }
+        addLog('out', prodNom);
+        renderLivraisons();
+        showFeedback('ok', prodNom, d.message || 'Sorti du stock ✓');
+      } else {
+        btn.disabled = false;
+        btn.textContent = '✓';
+        showFeedback('err', 'Erreur', d.message);
+      }
+    })
+    .catch(function() {
+      btn.disabled = false;
+      btn.textContent = '✓';
+      showFeedback('err', 'Connexion impossible', 'Réessayez.');
     });
 }
 
