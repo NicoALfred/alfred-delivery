@@ -1,3 +1,10 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Alfred Stock Mobile</title>
 <style>
   :root {
@@ -178,6 +185,21 @@
   }
   .liv-check-btn:active { transform: scale(.9); opacity: .7; }
   .liv-check-btn:disabled { opacity: .4; }
+  .liv-undo-btn {
+    flex-shrink: 0;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--err);
+    background: var(--err-bg);
+    color: var(--err);
+    font-size: 16px; font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+    -webkit-user-select: none; user-select: none;
+  }
+  .liv-undo-btn:active { transform: scale(.9); opacity: .7; }
+  .liv-undo-btn:disabled { opacity: .4; }
   .liv-empty { text-align: center; color: var(--fg-soft); font-size: 13px; padding: 16px 0; }
   .liv-loading { text-align: center; color: var(--fg-soft); font-size: 13px; padding: 12px 0; }
 
@@ -185,6 +207,30 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .spinner { width: 22px; height: 22px; border: 2.5px solid var(--border); border-top-color: var(--mode-out); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
   .spinner-sm { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--mode-out); border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
+
+  /* Modal confirmation */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000;
+    display: flex; align-items: flex-end; justify-content: center;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    animation: fadeIn .2s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal-box {
+    background: var(--surface); border-radius: 20px 20px 0 0;
+    padding: 24px 20px 28px; width: 100%; max-width: 480px;
+    box-shadow: 0 -4px 30px rgba(0,0,0,.15);
+    animation: slideUp .25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .modal-sub { font-size: 14px; color: var(--fg-soft); margin-bottom: 20px; line-height: 1.4; }
+  .modal-prod { font-size: 15px; font-weight: 700; color: var(--mode-out); background: var(--mode-out-bg); border-radius: 8px; padding: 8px 12px; margin-bottom: 20px; }
+  .modal-btns { display: flex; gap: 10px; }
+  .modal-btns button { flex: 1; height: 50px; border-radius: 12px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: all .15s; }
+  .modal-btn-cancel { background: var(--border); color: var(--fg-soft); }
+  .modal-btn-confirm { background: var(--mode-out); color: #fff; }
+  .modal-btns button:active { opacity: .8; transform: scale(.97); }
 
   /* Toast */
   .toast { position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); left: 50%; transform: translateX(-50%) translateY(10px); background: var(--fg); color: var(--bg); padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 999; }
@@ -246,6 +292,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<div id="modal-area"></div>
 
 <script>
 var WEBAPP = "https://script.google.com/macros/s/AKfycbw41mSrg_tvoNS14Faf4RsOKI-P7LYflruuyWFTmIucJhszs5N8Eg8BH_-FxusFKC7DCQ/exec";
@@ -326,8 +373,14 @@ function renderLivraisons() {
     var btnHtml = '';
     if (!scanned && !rupture) {
       btnHtml = '<button class="liv-check-btn" onclick="marquerManuellement(this,' + idx + ')" title="Cocher à la main">✓</button>';
+    } else if (rupture) {
+      btnHtml = '<div class="liv-status">⚠️</div>';
+    } else if (x.manuelCoche) {
+      // Coché manuellement → bouton Annuler
+      btnHtml = '<button class="liv-undo-btn" onclick="annulerCoche(this)" title="Annuler la sortie">✕</button>';
     } else {
-      btnHtml = '<div class="liv-status">' + (rupture ? '⚠️' : '✅') + '</div>';
+      // Coché par scanner → juste le statut
+      btnHtml = '<div class="liv-status">✅</div>';
     }
     html += '<div class="' + cls + '">' +
       '<div class="liv-icon">' + icon + '</div>' +
@@ -414,40 +467,59 @@ function doScan() {
     });
 }
 
-// Cochage manuel depuis la liste (sans scanner)
-function marquerManuellement(btn, idx) {
-  // Retrouve le vrai index dans livraisons (items est filtré+trié, on cherche par produit+site)
-  var listItems = document.querySelectorAll('.liv-item:not(.scanned):not(.rupture)');
-  // On cherche dans livraisons le produit correspondant à la position dans la liste rendue
-  var nonScanned = [];
-  livraisons.filter(function(x) { return x.produit && !isCafe(x.produit); })
-    .sort(function(a, b) {
-      var aOk = a.scanne || a.rupture ? 1 : 0;
-      var bOk = b.scanne || b.rupture ? 1 : 0;
-      return aOk - bOk || a.produit.localeCompare(b.produit);
-    })
-    .forEach(function(x, i) { if (!x.scanne && !x.rupture) nonScanned.push(x); });
+// ── Modal confirmation ────────────────────────────────────────────────────
+function showModal(prodNom, siteNom, onConfirm) {
+  var area = document.getElementById('modal-area');
+  area.innerHTML =
+    '<div class="modal-overlay" id="modal-overlay">' +
+    '<div class="modal-box">' +
+    '<div class="modal-title">Confirmer la sortie</div>' +
+    '<div class="modal-sub">Voulez-vous marquer ce produit comme sorti du stock ?</div>' +
+    '<div class="modal-prod">📦 ' + esc(prodNom) + '<br><span style="font-size:12px;font-weight:400;color:var(--fg-soft)">📍 ' + esc(siteNom) + '</span></div>' +
+    '<div class="modal-btns">' +
+    '<button class="modal-btn-cancel" onclick="closeModal()">Annuler</button>' +
+    '<button class="modal-btn-confirm" id="modal-confirm-btn" onclick="confirmModal()">✓ Confirmer</button>' +
+    '</div></div></div>';
+  area._onConfirm = onConfirm;
+  // Ferme si on clique l'overlay
+  document.getElementById('modal-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+}
+function closeModal() {
+  document.getElementById('modal-area').innerHTML = '';
+}
+function confirmModal() {
+  var btn = document.getElementById('modal-confirm-btn');
+  btn.disabled = true; btn.textContent = '…';
+  var fn = document.getElementById('modal-area')._onConfirm;
+  closeModal();
+  if (fn) fn();
+}
 
-  // idx correspond à la position dans items[] (tous), on doit retrouver le bon
-  // Plus simple : on lit le nom affiché dans le parent
+// ── Cochage manuel depuis la liste (sans scanner) ─────────────────────────
+function marquerManuellement(btn, idx) {
   var row = btn.closest('.liv-item');
   var prodNom = row.querySelector('.liv-prod').textContent;
   var siteNom = row.querySelector('.liv-site').textContent.replace('📍 ', '').trim();
 
-  // Désactive le bouton pendant l'appel
-  btn.disabled = true;
-  btn.textContent = '…';
+  showModal(prodNom, siteNom, function() {
+    // Désactive le bouton ✓ original (il peut ne plus exister après closeModal, on le retrouve)
+    doMarquerManuellement(prodNom, siteNom);
+  });
+}
 
+function doMarquerManuellement(prodNom, siteNom) {
   fetch(WEBAPP + '?action=stockSortieManuel&produit=' + encodeURIComponent(prodNom) + '&site=' + encodeURIComponent(siteNom))
     .then(function(r) { return r.json(); })
     .then(function(d) {
       if (d.ok || d.warn) {
-        // Marquer dans livraisons[]
         for (var i = 0; i < livraisons.length; i++) {
           if (!livraisons[i].scanne &&
               livraisons[i].produit === prodNom &&
               (livraisons[i].site || '—') === siteNom) {
             livraisons[i].scanne = true;
+            livraisons[i].manuelCoche = true; // flag pour bouton Annuler
             break;
           }
         }
@@ -455,14 +527,47 @@ function marquerManuellement(btn, idx) {
         renderLivraisons();
         showFeedback('ok', prodNom, d.message || 'Sorti du stock ✓');
       } else {
-        btn.disabled = false;
-        btn.textContent = '✓';
         showFeedback('err', 'Erreur', d.message);
       }
     })
     .catch(function() {
-      btn.disabled = false;
-      btn.textContent = '✓';
+      showFeedback('err', 'Connexion impossible', 'Réessayez.');
+    });
+}
+
+// ── Annulation d'une coche manuelle ──────────────────────────────────────
+function annulerCoche(btn) {
+  var row = btn.closest('.liv-item');
+  var prodNom = row.querySelector('.liv-prod').textContent;
+  var siteNom = row.querySelector('.liv-site').textContent.replace('📍 ', '').trim();
+
+  if (!confirm('Annuler la sortie de "' + prodNom + '" ?')) return;
+
+  btn.disabled = true; btn.textContent = '…';
+
+  fetch(WEBAPP + '?action=stockSortieAnnuler&produit=' + encodeURIComponent(prodNom) + '&site=' + encodeURIComponent(siteNom))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) {
+        for (var i = 0; i < livraisons.length; i++) {
+          if (livraisons[i].scanne && livraisons[i].manuelCoche &&
+              livraisons[i].produit === prodNom &&
+              (livraisons[i].site || '—') === siteNom) {
+            livraisons[i].scanne = false;
+            livraisons[i].manuelCoche = false;
+            break;
+          }
+        }
+        renderLivraisons();
+        showFeedback('warn', prodNom, 'Sortie annulée — produit remis en attente');
+        showToast('↩ Annulé');
+      } else {
+        btn.disabled = false; btn.textContent = '✕';
+        showFeedback('err', 'Erreur', d.message);
+      }
+    })
+    .catch(function() {
+      btn.disabled = false; btn.textContent = '✕';
       showFeedback('err', 'Connexion impossible', 'Réessayez.');
     });
 }
@@ -528,3 +633,5 @@ document.getElementById('scan-input').addEventListener('blur', function() {
   if (mode) { var self = this; setTimeout(function(){ self.focus(); }, 100); }
 });
 </script>
+</body>
+</html>
