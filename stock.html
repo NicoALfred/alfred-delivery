@@ -579,6 +579,7 @@ function markScanned(produit) {
   for (var i = 0; i < livraisons.length; i++) {
     if (!livraisons[i].scanne && String(livraisons[i].produit).toLowerCase().trim() === prodLow) {
       livraisons[i].scanne = true;
+      livraisons[i].manuelCoche = false; // scanné par code-barres → pas de bouton Annuler
       found = true;
       break;
     }
